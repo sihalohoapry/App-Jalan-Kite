@@ -57,15 +57,22 @@ public class LoginActivity extends AppCompatActivity {
                         @Override
                         public void onResponse(@NonNull Call<LoginResponse> call, @NonNull Response<LoginResponse> response) {
                             if (response.isSuccessful()){
-                                if (response.body().getData() != null) {
-                                    PrefManager prefManager = new PrefManager(LoginActivity.this);
-                                    prefManager.createLoginSession(
-                                            response.body().getData().getName(),
-                                            response.body().getData().getEmail());
+                                if (response.body().isStatus()) {
+                                    if (response.body().getData() != null) {
+                                        PrefManager prefManager = new PrefManager(LoginActivity.this);
+                                        prefManager.createLoginSession(
+                                                response.body().getData().getName(),
+                                                response.body().getData().getEmail());
+                                        loading(false);
+                                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                        finish();
+                                    }
+                                }else {
+
                                     loading(false);
-                                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                    finish();
+                                    Toast.makeText(getBaseContext(),"gagal login", Toast.LENGTH_SHORT).show();
                                 }
+
                             }else {
                                 if (response.body() != null) {
                                     loading(false);

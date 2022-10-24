@@ -1,66 +1,160 @@
 package com.development.jalankite.ui.home.mapsfragment;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.development.jalankite.R;
+import com.development.jalankite.databinding.FragmentMapsBinding;
+import com.development.jalankite.network.ApiClient;
+import com.development.jalankite.ui.detail.DetailActivity;
+import com.development.jalankite.ui.home.AllLokasiResponse;
+import com.development.jalankite.ui.home.DataItem;
+import com.google.gson.Gson;
+import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
+import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.geometry.LatLngBounds;
+import com.mapbox.mapboxsdk.maps.MapboxMap;
+import com.mapbox.mapboxsdk.maps.Style;
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager;
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link MapsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.ArrayList;
+import java.util.function.Consumer;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class MapsFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public MapsFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment MapsFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static MapsFragment newInstance(String param1, String param2) {
-        MapsFragment fragment = new MapsFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
+    FragmentMapsBinding binding;
+    private MapboxMap mapboxMapFrag;
+    private ArrayList<DataItem> dataLokasi = new ArrayList<DataItem>();
+    private static final String ICON_ID = "ICON_ID";
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_maps, container, false);
+        Mapbox.getInstance(requireContext(), getString(R.string.mapbox_access_token));
+        binding = FragmentMapsBinding.inflate(inflater, container, false);
+        View view = binding.getRoot();
+
+        binding.mapView.onCreate(savedInstanceState);
+        binding.mapView.getMapAsync(mapboxMap1 -> {
+            this.mapboxMapFrag = mapboxMap1;
+            getAllLocation();
+        });
+        return view;
+    }
+        private void getAllLocation() {
+        Call<AllLokasiResponse> client = ApiClient.getApiService().getAllDataLokasi();
+        client.enqueue(new Callback<AllLokasiResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<AllLokasiResponse> call, Response<AllLokasiResponse> response) {
+                if (response.isSuccessful()) {
+                    assert response.body() != null;
+                    mapboxMapFrag.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
+                        @SuppressLint("NewApi")
+                        @Override
+                        public void onStyleLoaded(@NonNull Style style) {
+                            style.addImage(ICON_ID, BitmapFactory.decodeResource(getResources(), com.mapbox.mapboxsdk.R.drawable.mapbox_marker_icon_default));
+                            LatLngBounds.Builder latLngBoundsBuilder = new LatLngBounds.Builder();
+                            SymbolManager symbolManager = new SymbolManager(binding.mapView, mapboxMapFrag, style);
+                            symbolManager.setIconAllowOverlap(true);
+                            ArrayList<SymbolOptions> option = new ArrayList<>();
+                            response.body().getData().forEach(dataItem -> {
+                                latLngBoundsBuilder.include(new LatLng(dataItem.getLatitude(),dataItem.getLongitude()));
+                                option.add(new SymbolOptions()
+                                        .withLatLng(new LatLng(dataItem.getLatitude(),dataItem.getLongitude()))
+                                        .withIconImage(ICON_ID)
+                                        .withTextField(dataItem.getNamaLokasi())
+                                        .withData(new Gson().toJsonTree(dataItem))
+                                );
+                            });
+                            symbolManager.create(option);
+                            LatLngBounds latLngBounds = latLngBoundsBuilder.build();
+                            mapboxMapFrag.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, 50), 5000);
+                            symbolManager.addClickListener(symbol -> {
+                                DataItem data = new Gson().fromJson(symbol.getData(), DataItem.class);
+                                Intent intent = new Intent(requireActivity(), DetailActivity.class);
+                                intent.putExtra("intent_nama_lokasi", data.getNamaLokasi());
+                                intent.putExtra("intent_alamat_lokasi", data.getAlamatLokasi());
+                                intent.putExtra("intent_deskripsi_lokasi", data.getDeskripsiLokasi());
+                                intent.putExtra("intent_lat_lokasi", data.getLatitude());
+                                intent.putExtra("intent_long_lokasi", data.getLongitude());
+                                intent.putExtra("intent_image", data.getFoto());
+                                startActivity( intent );
+
+                            });
+                        }
+                    });
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AllLokasiResponse> call, Throwable t) {
+                Toast.makeText(requireContext(), "Gagal menampilkan lokasi", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        binding.mapView.onStart();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        binding.mapView.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        binding.mapView.onPause();
+    }
+    @Override
+    public void onStop() {
+        super.onStop();
+        binding.mapView.onStop();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        binding.mapView.onSaveInstanceState(outState);
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        binding.mapView.onDestroy();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        binding.mapView.onLowMemory();
     }
 }

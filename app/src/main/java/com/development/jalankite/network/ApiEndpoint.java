@@ -30,4 +30,10 @@ public interface ApiEndpoint {
             @Field("email") String email,
             @Field("password") String password
     );
+
+    @FormUrlEncoded
+    @POST("lokasi-by-name")
+    Call<AllLokasiResponse> responseLokasiByName(
+            @Field("nama_lokasi") String name
+    );
 }
