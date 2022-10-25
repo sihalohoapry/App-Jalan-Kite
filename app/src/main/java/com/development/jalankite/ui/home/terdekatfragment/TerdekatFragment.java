@@ -7,6 +7,7 @@ import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
@@ -59,7 +60,7 @@ public class TerdekatFragment extends Fragment {
     private LocationComponent locationComponent;
     private MapboxMap mapboxMap;
     private AdapterLokasiTerdekat adapterLokasiTerdekat;
-
+    private AlertDialog alertDialog;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,6 +84,7 @@ public class TerdekatFragment extends Fragment {
     }
     @SuppressLint("MissingPermission")
     private void getMyLocation() {
+        loading(true);
         binding.mapView.getMapAsync(mapboxMap -> {
             this.mapboxMap = mapboxMap;
             mapboxMap.setStyle(Style.MAPBOX_STREETS, style -> {
@@ -105,6 +107,7 @@ public class TerdekatFragment extends Fragment {
                         Double longitude = locationComponent.getLastKnownLocation().getLongitude();
                         getDataLokasi(latitude,longitude);
                     } else {
+                        loading(false);
                         Toast.makeText(requireContext(), "Silahkan hidupkan GPS dan restart aplikasi", Toast.LENGTH_SHORT).show();
                     }
 
@@ -113,6 +116,7 @@ public class TerdekatFragment extends Fragment {
                     permissionsManager = new PermissionsManager(new PermissionsListener() {
                         @Override
                         public void onExplanationNeeded(List<String> permissionsToExplain) {
+                            loading(false);
                             Toast.makeText(requireContext(), "Anda harus mengizinkan location permission untuk menggunakan aplikasi ini", Toast.LENGTH_SHORT).show();
                         }
 
@@ -122,10 +126,12 @@ public class TerdekatFragment extends Fragment {
                                 mapboxMap.getStyle(new Style.OnStyleLoaded() {
                                     @Override
                                     public void onStyleLoaded(@NonNull Style style) {
+                                        loading(false);
                                         getMyLocation();
                                     }
                                 });
                             } else {
+                                loading(false);
                                 Toast.makeText(requireContext(), R.string.user_location_permission_not_granted, Toast.LENGTH_LONG).show();
                                 getActivity().finish();
                             }
@@ -202,6 +208,7 @@ public class TerdekatFragment extends Fragment {
                                 }
                             });
                             adapterLokasiTerdekat.setdata(resultList);
+                            loading(false);
                         }
 
                     }
@@ -209,6 +216,7 @@ public class TerdekatFragment extends Fragment {
 
                 @Override
                 public void onFailure(Call<AllLokasiResponse> call, Throwable t) {
+                    loading(false);
                     Log.e("LokasiGagal", t.getMessage());
                 }
             });
@@ -217,6 +225,18 @@ public class TerdekatFragment extends Fragment {
             Toast.makeText(requireContext(), "Silahkan aktifkan GPS dan restart aplikasi", Toast.LENGTH_SHORT).show();
         }
  }
+    private void loading(Boolean loading){
+        if (loading){
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            LayoutInflater inflater = requireActivity().getLayoutInflater();
+            builder.setView(inflater.inflate(R.layout.custom_dialog, null ));
+            builder.setCancelable(false);
+            alertDialog = builder.create();
+            alertDialog.show();
+        } else{
+            alertDialog.dismiss();
+        }
+    }
 
     @Override
     public void onStart() {

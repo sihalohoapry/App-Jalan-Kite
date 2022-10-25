@@ -1,7 +1,6 @@
 package com.development.jalankite.ui;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +30,7 @@ public class AdapterLokasiTerdekat extends RecyclerView.Adapter<AdapterLokasiTer
     @NonNull
     @Override
     public AdapterLokasiTerdekat.ListViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.lokasi_list,parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_lokasi_terdekat,parent, false);
         return  new ListViewHolder(view);
     }
 
@@ -45,7 +44,8 @@ public class AdapterLokasiTerdekat extends RecyclerView.Adapter<AdapterLokasiTer
                 .into(holder.imgPhoto);
         holder.tvName.setText(dataItem.getNamaLokasi());
         String jarak = String.valueOf(dataItem.getJarak());
-        holder.tvAlamat.setText(jarak);
+        holder.tvAlamat.setText(dataItem.getAlamatLokasi());
+        holder.tvJarak.setText(jarak);
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -61,12 +61,13 @@ public class AdapterLokasiTerdekat extends RecyclerView.Adapter<AdapterLokasiTer
 
     public  class ListViewHolder extends RecyclerView.ViewHolder {
         ImageView imgPhoto;
-        TextView tvName, tvAlamat;
+        TextView tvName, tvAlamat, tvJarak;
         public ListViewHolder(@NonNull View itemView) {
             super(itemView);
-            imgPhoto = itemView.findViewById(R.id.iv_poto);
-            tvName = itemView.findViewById(R.id.tv_nama_lokasi);
-            tvAlamat = itemView.findViewById(R.id.tv_alamat);
+            imgPhoto = itemView.findViewById(R.id.iv_poto_terdekat);
+            tvName = itemView.findViewById(R.id.tv_nama_lokasi_terdekat);
+            tvAlamat = itemView.findViewById(R.id.tv_alamat_terdekat);
+            tvJarak = itemView.findViewById(R.id.jarak);
         }
     }
 

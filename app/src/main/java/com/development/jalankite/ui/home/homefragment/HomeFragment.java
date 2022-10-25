@@ -1,20 +1,16 @@
 package com.development.jalankite.ui.home.homefragment;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SearchView;
-import android.widget.Toast;
-
 import com.development.jalankite.R;
 import com.development.jalankite.databinding.FragmentHomeBinding;
 import com.development.jalankite.network.ApiClient;
@@ -23,6 +19,7 @@ import com.development.jalankite.ui.AdapterLokasi;
 import com.development.jalankite.ui.detail.DetailActivity;
 import com.development.jalankite.ui.home.AllLokasiResponse;
 import com.development.jalankite.ui.home.DataItem;
+import com.development.jalankite.ui.home.MainActivity;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,10 +36,10 @@ public class HomeFragment extends Fragment {
     private RecyclerView rvLokasi;
     private ArrayList<DataItem> list = new ArrayList<>();
     private AdapterLokasi adapterLokasi;
+    private AlertDialog alertDialog;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
 
@@ -89,6 +86,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void getLokasiByName(String s) {
+        loading(true);
         Call<AllLokasiResponse> client = ApiClient.getApiService().responseLokasiByName(s);
         client.enqueue(new Callback<AllLokasiResponse>() {
             @Override
@@ -96,17 +94,31 @@ public class HomeFragment extends Fragment {
                 if (response.isSuccessful()) {
                     assert response.body() != null;
                     adapterLokasi.setdata(response.body().getData());
+                    loading(false);
                 }
             }
 
             @Override
             public void onFailure(Call<AllLokasiResponse> call, Throwable t) {
                 Log.e("LokasiGagal", t.getMessage());
+                loading(false);
             }
         });
     }
 
 
+    private void loading(Boolean loading){
+        if (loading){
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            LayoutInflater inflater = requireActivity().getLayoutInflater();
+            builder.setView(inflater.inflate(R.layout.custom_dialog, null ));
+            builder.setCancelable(false);
+            alertDialog = builder.create();
+            alertDialog.show();
+        } else{
+            alertDialog.dismiss();
+        }
+    }
 
 
     private void getDataSession() {
@@ -115,6 +127,8 @@ public class HomeFragment extends Fragment {
         String name =  userDetail.get(PrefManager.KEY_NAME);
         binding.textView2.setText("Selamat Datang " + " " + name);
     }
+
+
 
 
     @Override

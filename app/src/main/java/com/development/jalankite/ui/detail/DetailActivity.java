@@ -2,10 +2,12 @@ package com.development.jalankite.ui.detail;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 
 import com.bumptech.glide.Glide;
 import com.development.jalankite.R;
@@ -16,6 +18,8 @@ public class DetailActivity extends AppCompatActivity {
     ActivityDetailBinding binding;
     double latitude;
     double longitude;
+    private View dialogView;
+    private AlertDialog alertDialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
