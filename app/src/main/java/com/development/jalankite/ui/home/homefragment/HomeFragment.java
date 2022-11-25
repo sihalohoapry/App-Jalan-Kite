@@ -92,9 +92,13 @@ public class HomeFragment extends Fragment {
             @Override
             public void onResponse(Call<AllLokasiResponse> call, Response<AllLokasiResponse> response) {
                 if (response.isSuccessful()) {
-                    assert response.body() != null;
-                    adapterLokasi.setdata(response.body().getData());
-                    loading(false);
+                    if (response.body().getData() == null){
+                        loading(false);
+                    }else{
+                        adapterLokasi.setdata(response.body().getData());
+                        loading(false);
+                    }
+
                 }
             }
 

@@ -13,27 +13,10 @@ public class ApiClient {
                 .addInterceptor(loggingInterceptor)
                 .build();
         Retrofit retrofit = new retrofit2.Retrofit.Builder()
-                .baseUrl("http://192.168.0.190:8000/api/")
+                .baseUrl("http://192.168.43.203:8000/api/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(client)
                 .build();
         return retrofit.create(ApiEndpoint.class);
     }
-//    private static String BASE_URL = "";
-//    public static ApiEndpoint endpoint(){
-//        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor()
-//                .setLevel(HttpLoggingInterceptor.Level.BODY);
-//        OkHttpClient client = new OkHttpClient.Builder()
-//                .addInterceptor(loggingInterceptor)
-//                .build();
-//
-//        Retrofit retrofit = new Retrofit.Builder()
-//                .baseUrl("http://192.168.0.190:8000/api/")
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .client(client)
-//                .build();
-//
-//
-//        return retrofit.create( ApiEndpoint.class );
-//    }
 }

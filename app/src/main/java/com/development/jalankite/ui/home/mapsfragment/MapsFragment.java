@@ -72,42 +72,46 @@ public class MapsFragment extends Fragment {
             public void onResponse(@NonNull Call<AllLokasiResponse> call, Response<AllLokasiResponse> response) {
                 if (response.isSuccessful()) {
                     assert response.body() != null;
-                    mapboxMapFrag.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
-                        @SuppressLint("NewApi")
-                        @Override
-                        public void onStyleLoaded(@NonNull Style style) {
-                            style.addImage(ICON_ID, BitmapFactory.decodeResource(getResources(), com.mapbox.mapboxsdk.R.drawable.mapbox_marker_icon_default));
-                            LatLngBounds.Builder latLngBoundsBuilder = new LatLngBounds.Builder();
-                            SymbolManager symbolManager = new SymbolManager(binding.mapView, mapboxMapFrag, style);
-                            symbolManager.setIconAllowOverlap(true);
-                            ArrayList<SymbolOptions> option = new ArrayList<>();
-                            response.body().getData().forEach(dataItem -> {
-                                latLngBoundsBuilder.include(new LatLng(dataItem.getLatitude(),dataItem.getLongitude()));
-                                option.add(new SymbolOptions()
-                                        .withLatLng(new LatLng(dataItem.getLatitude(),dataItem.getLongitude()))
-                                        .withIconImage(ICON_ID)
-                                        .withTextField(dataItem.getNamaLokasi())
-                                        .withData(new Gson().toJsonTree(dataItem))
-                                );
-                            });
-                            symbolManager.create(option);
-                            LatLngBounds latLngBounds = latLngBoundsBuilder.build();
-                            mapboxMapFrag.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, 50), 5000);
-                            symbolManager.addClickListener(symbol -> {
-                                DataItem data = new Gson().fromJson(symbol.getData(), DataItem.class);
-                                Intent intent = new Intent(requireActivity(), DetailActivity.class);
-                                intent.putExtra("intent_nama_lokasi", data.getNamaLokasi());
-                                intent.putExtra("intent_alamat_lokasi", data.getAlamatLokasi());
-                                intent.putExtra("intent_deskripsi_lokasi", data.getDeskripsiLokasi());
-                                intent.putExtra("intent_lat_lokasi", data.getLatitude());
-                                intent.putExtra("intent_long_lokasi", data.getLongitude());
-                                intent.putExtra("intent_image", data.getFoto());
-                                startActivity( intent );
+                    if (response.body().getData() != null) {
+                        mapboxMapFrag.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
+                            @SuppressLint("NewApi")
+                            @Override
+                            public void onStyleLoaded(@NonNull Style style) {
+                                style.addImage(ICON_ID, BitmapFactory.decodeResource(getResources(), com.mapbox.mapboxsdk.R.drawable.mapbox_marker_icon_default));
+                                LatLngBounds.Builder latLngBoundsBuilder = new LatLngBounds.Builder();
+                                SymbolManager symbolManager = new SymbolManager(binding.mapView, mapboxMapFrag, style);
+                                symbolManager.setIconAllowOverlap(true);
+                                ArrayList<SymbolOptions> option = new ArrayList<>();
+                                response.body().getData().forEach(dataItem -> {
+                                    latLngBoundsBuilder.include(new LatLng(dataItem.getLatitude(),dataItem.getLongitude()));
+                                    option.add(new SymbolOptions()
+                                            .withLatLng(new LatLng(dataItem.getLatitude(),dataItem.getLongitude()))
+                                            .withIconImage(ICON_ID)
+                                            .withTextField(dataItem.getNamaLokasi())
+                                            .withData(new Gson().toJsonTree(dataItem))
+                                    );
+                                });
+                                symbolManager.create(option);
+                                LatLngBounds latLngBounds = latLngBoundsBuilder.build();
+                                mapboxMapFrag.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, 50), 5000);
+                                symbolManager.addClickListener(symbol -> {
+                                    DataItem data = new Gson().fromJson(symbol.getData(), DataItem.class);
+                                    Intent intent = new Intent(requireActivity(), DetailActivity.class);
+                                    intent.putExtra("intent_nama_lokasi", data.getNamaLokasi());
+                                    intent.putExtra("intent_alamat_lokasi", data.getAlamatLokasi());
+                                    intent.putExtra("intent_deskripsi_lokasi", data.getDeskripsiLokasi());
+                                    intent.putExtra("intent_lat_lokasi", data.getLatitude());
+                                    intent.putExtra("intent_long_lokasi", data.getLongitude());
+                                    intent.putExtra("intent_image", data.getFoto());
+                                    startActivity( intent );
 
-                            });
-                        }
-                    });
+                                });
+                            }
+                        });
 
+                    } else {
+                        Toast.makeText(requireContext(), "Data Lokasi Tidak Ada", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
 
